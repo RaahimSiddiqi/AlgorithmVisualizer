@@ -15,7 +15,7 @@ function Header(props) {
     return (
       <AppBar color='transparent' position='static' sx={{m: 0}}>
         <Toolbar>       
-          <Typography variant="h6" component='div' sx={{flexGrow:1}}>Algorithm Visualizer</Typography>
+          <Typography variant="h6" component='div' sx={{flexGrow:1}}>Algo Vision</Typography>
           <Stack direction="row" spacing={2} sx={{ display : { xs : 'none', md : 'flex'}}}>
             {
               links.map((item, key) =>
@@ -23,7 +23,6 @@ function Header(props) {
                   color="inherit" 
                   key={key} 
                   onClick={()=>navigate(item.path)} 
-                  sx= "5px solid gray"
                 >
                   {item.name}
                 </Button>

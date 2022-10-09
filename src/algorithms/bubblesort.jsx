@@ -4,6 +4,11 @@ import { Component } from "react";
 import ArrowRightRoundedIcon from '@mui/icons-material/ArrowRightRounded';
 import FastForwardRoundedIcon from '@mui/icons-material/FastForwardRounded';
 import Icon from '@mui/material/Icon';
+import "./source.css";
+
+function timeout(delay) {
+    return new Promise( res => setTimeout(res, delay) );
+}
 
 
 class BubbleSort extends Component {
@@ -13,8 +18,15 @@ class BubbleSort extends Component {
             array : [3, 5, 7, 8, 5, 1, 4, 9, 7, 1],
             name : "BubbleSort"
         }
+        this.original = [3, 5, 7, 8, 5, 1, 4, 9, 7, 1];
+        this.numbers = [];
+
         this.sort = this.sort.bind(this);
         this.handleClick = this.handleClick.bind(this);
+        this.nextFrame = this.nextFrame.bind(this);
+        this.playAnimation = this.playAnimation.bind(this);
+        this.resetAnimation = this.resetAnimation.bind(this);
+        this.animate = this.animate.bind(this);
         this.x = this.sort();
     }
 
@@ -28,13 +40,46 @@ class BubbleSort extends Component {
                     array[j+1] = temp
                 }
             }
-            yield array;
+            yield {array:array, i:i, j:j};
+        }
+    }
+
+    animate(delay) {
+        let value = this.x.next().value;
+        if (value) {
+            let array = value.array;
+            let i = value.i;
+            let j = value.j;
+            setTimeout(function() {
+                this.setState({array: array});
+                this.animate(delay);
+            }.bind(this), delay)
+        }
+    }
+
+    nextFrame(delay) {
+        console.log(this.numbers);
+        let value = this.x.next().value;
+        if (value) {
+            let array = value.array;
+            setTimeout(function() {
+                this.setState({array: array});
+            }.bind(this), delay)
         }
     }
 
     handleClick() {
-        let value = this.x.next().value;
-        this.setState({array: value});
+        this.nextFrame(0);
+    }
+
+    playAnimation() {
+        this.animate(1000);
+    }
+
+    resetAnimation() {
+        this.x = this.sort();
+        console.log(this.original)
+        this.setState({array: [...this.original]});
     }
     
     render() { 
@@ -47,8 +92,8 @@ class BubbleSort extends Component {
                 <Box sx = {{display:"flex", width:'100%'}}>
                     <Box margin="auto" display="flex" mt={'calc(40vh - 65px)'}>
                     {
-                    this.state.array.map((number, key) => 
-                    <Paper sx = {{width:80, height:80, backgroundColor:"lightblue", m:1}}>
+                    this.numbers = this.state.array.map((number, key) => 
+                    <Paper key={key} sx = {{width:80, height:80, backgroundColor:"lightblue", m:1}}>
                         <Typography pt={2} variant="h4" align="center">{number}</Typography>
                     </Paper>
                     )}
@@ -57,10 +102,9 @@ class BubbleSort extends Component {
 
                 <Box sx = {{display:"flex", width:'100%', mt:'calc(10vh + 30px)'}}>
                     <Box margin="auto">
-                        <IconButton onClick={this.handleClick} size="large"><FastForwardRoundedIcon/></IconButton>
-                        <IconButton size="large"><ArrowRightRoundedIcon /></IconButton>
-                        <IconButton size="large"><ArrowRightRoundedIcon /></IconButton>
-                        <IconButton size="large"><FastForwardRoundedIcon /></IconButton>
+                        <Button onClick={this.playAnimation}>Play Animation</Button>
+                        <Button onClick={this.handleClick}>Next Frame</Button>
+                        <Button onClick={this.resetAnimation}>Reset Animation</Button>
                     </Box>
                 </Box>
             </Box>
