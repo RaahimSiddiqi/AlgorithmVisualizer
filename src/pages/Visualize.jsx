@@ -1,30 +1,44 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {Box, Typography, Paper, Button, MenuItem, Select, FormControl, InputLabel } from '@mui/material'
+import {Box, Typography, Paper, Button, MenuItem, Select, FormControl, InputLabel, FormGroup,
+        Switch, FormControlLabel } from '@mui/material'
 import { Component } from "react";
-import { StyledCell, SwappedCell }  from "./animations";
+import { StyledCell, SwappedCell, StyledColumn }  from "./animations";
 import Cell  from "../components/Cell";
 import { styled } from '@mui/system';
-import {BubbleSort, InsertionSort, HeapSort, QuickSort} from "../algorithms";
+import {BubbleSort, InsertionSort, HeapSort, QuickSort, MergeSort, 
+       CountingSort, RadixSort, QuickInsertionSort, BucketSort} from "../algorithms";
+import Animator from "../utils/Animator";
 import "./styles.css";
+import { createRef } from 'react';
 
 class Visualize extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            array : [3, 5, 7, 8, 5, 1, 4, 9, 7, 1],
-            delay : 1000, // 1x 1000 - 2x 500 - 4x 250 - 8x 125 - 16x 62.5
-            name : "Bubble Sort",
-            value: 0
+            array : Array.from(Array(16)).map(x=>Math.round(Math.random()*100)),
+            fps : 1, 
+            name : "Merge Sort",
+            value: 4,
+            mode : 0
         }
         this.sorts = { 
             "Bubble Sort" : () => BubbleSort(this),
             "Insertion Sort" : () => InsertionSort(this),
+            "Quick Sort" : () => QuickSort(this),
             "Heap Sort" : () => HeapSort(this),
-            "Quick Sort" : () => QuickSort(this)
+            "Merge Sort" : () => MergeSort(this),
+            "Counting Sort" : () => CountingSort(this),
+            "Radix Sort" : () => RadixSort(this),
+            "Bucket Sort" : () => BucketSort(this),
+            "Quick Insertion Sort" : () => QuickInsertionSort(this)
         }
-        this.original = [3, 5, 7, 8, 5, 1, 4, 9, 7, 1];
+        this.original = [...this.state.array];
         this.selected = new Array(this.state.array.length).fill(0);
         this.cells = null;
+        this.x = this.sorts[this.state.name]();
+        this.playing = false;
+        this.animator = new Animator(this, this.animate)
+        this.file = createRef(null);
 
         this.handleClick = this.handleClick.bind(this);
         this.playAnimation = this.playAnimation.bind(this);
@@ -33,121 +47,175 @@ class Visualize extends Component {
         this.animate = this.animate.bind(this);
         this.cellFactory = this.cellFactory.bind(this);
         this.changeSpeed = this.changeSpeed.bind(this);
-        this.x = this.sorts[this.state.name]();
-        this.playing = false;
+        this.handleMode = this.handleMode.bind(this);
+        this.stop = this.stop.bind(this);
+        this.loadNumbersFromFile = this.loadNumbersFromFile.bind(this);
+    }
+
+    stop() {
+        this.animator.stop();
     }
       
     handleAlgorithmChange(event) {
         if (event.target.value === 0)  
             this.setState({name: "Bubble Sort", value:0}, () => this.x = this.sorts[this.state.name]())
-        if (event.target.value === 1) 
+        else if (event.target.value === 1) 
             this.setState({name: "Insertion Sort", value:1}, () => this.x = this.sorts[this.state.name]())
-        if (event.target.value === 2) 
+        else if (event.target.value === 2) 
             this.setState({name: "Quick Sort", value:2}, () => this.x = this.sorts[this.state.name]())
-        if (event.target.value === 3) 
+        else if (event.target.value === 3) 
             this.setState({name: "Heap Sort", value:3}, () => this.x = this.sorts[this.state.name]())
+        else if (event.target.value === 4) 
+            this.setState({name: "Merge Sort", value:4}, () => this.x = this.sorts[this.state.name]())
+        else if (event.target.value === 5) 
+            this.setState({name: "Counting Sort", value:5}, () => this.x = this.sorts[this.state.name]())
+        else if (event.target.value === 6) 
+            this.setState({name: "Radix Sort", value:6}, () => this.x = this.sorts[this.state.name]())
+        else if (event.target.value === 7) 
+            this.setState({name: "Radix Sort", value:7}, () => this.x = this.sorts[this.state.name]())
+        else if (event.target.value === 8) 
+            this.setState({name: "Quick Insertion Sort", value:8}, () => this.x = this.sorts[this.state.name]())
+        this.resetAnimation() 
+    }
+
+    handleMode(event) {
+        this.setState({mode:!this.state.mode}, () => {
+            if (this.state.mode) 
+                this.setState({array: Array.from(Array(50)).map(x=>Math.round(Math.random()*100))},
+                () => this.original = this.state.array)
+            else
+                this.setState({array: Array.from(Array(16)).map(x=>Math.round(Math.random()*100))},
+                () => this.original = this.state.array)
+        });
+        this.resetAnimation() 
     }
 
     changeSpeed() {
-        if (this.state.delay === 62.5)
-            this.setState({delay : 1000});
+        this.resetAnimation();
+        if (this.state.fps === 64)
+            this.setState({fps : 1});
         else
-        this.setState({delay : this.state.delay/2});
+        this.setState({fps : this.state.fps * 4});
+        this.playAnimation();
     }
 
-    animate(frames) {  // 0 for full animation, 1 for single frame
+    animate = (animatorRef) => {  // 0 for full animation, 1 for single frame
         if (this.playing === false) return;
         let nextFrame = this.x.next();
         let value = nextFrame.value;
-        // console.log(this.x);
 
         if (value) {  
-            let array = value.numbers;
-
-            setTimeout(function() {
-                // console.log(array, this.selected);
-                this.setState({array: array});
-                
-                if (frames === 0) this.animate(0);
-                else this.playing = false;
-            }.bind(this), frames === 0 ? this.state.delay : 1)
+            this.setState({array: value.numbers});
         }
-        else 
+        else {
             this.playing = false;
+            animatorRef.stop();
+        }
     }
 
     handleClick() {
-        if (this.playing == false) {
-            this.playing = true;
-            this.animate(1);
-        }
+        this.playing = true;
+        this.animator.next();
+        this.playing = false;
     }
 
     playAnimation() {
         this.playing = true;
-        this.animate(0);
+        this.animator.start();
+    }
+
+    loadNumbersFromFile() {
+        console.log("an");
+        this.file.current.files[0].arrayBuffer()
+            .then((buffer) => {
+                const list = new TextDecoder('utf-8').decode(buffer);
+                console.log(list);
+            })
     }
 
     resetAnimation() {
+        this.animator.stop();
         this.x = this.sorts[this.state.name]();
-        this.setState({array: [...this.original], delay:1000});
+        this.setState({array: [...this.original], fps: 1});
         this.selected = new Array(this.state.array.length).fill(0);
-        // console.log(this.state.array);
         this.playing = false;
     }
 
     cellFactory(key, number) {
-        switch(this.selected[key]) {
-            case 0: return <StyledCell><Cell color={"lightblue"} number={number} key={key}></Cell></StyledCell> // Default
-            case 1: return <StyledCell><Cell color={"green"} number={number} key={key}></Cell></StyledCell>     // Highlighted (currently selected)
-            case 2: return <SwappedCell><Cell color={"red"} number={number} key={key}></Cell></SwappedCell>     // Freshly Swapped
-            case 3: return <StyledCell><Cell color={"blue"} number={number} key={key}></Cell></StyledCell>      // In Final Sorted Position
-            case 4: return <StyledCell><Cell color={"yellow"} number={number} key={key}></Cell></StyledCell>    //  Highlighted (2) (For contrast)
+        if (this.state.mode) {
+            switch(this.selected[key]) {
+                case 0: return <StyledCell><Cell  width={20} height={3 * number} color={"#0093AB"} number={''} key={key}></Cell></StyledCell> // Default
+                case 2: return <StyledCell><Cell width={20} height={3 * number} color={"red"} number={''} key={key}></Cell></StyledCell>     // Freshly Swapped
+                default:  return <StyledCell><Cell  width={20} height={3 * number} color={"#0093AB"} number={''} key={key}></Cell></StyledCell> // Default
+            }
+        }
+        else {
+            switch(this.selected[key]) {
+                case 0: return <StyledCell><Cell  color={"#0093AB"} number={number} key={key}></Cell></StyledCell> // Default
+                case 1: return <StyledCell><Cell  color={"green"} number={number} key={key}></Cell></StyledCell>     // Highlighted (currently selected)
+                case 2: return <SwappedCell><Cell color={"red"} number={number} key={key}></Cell></SwappedCell>     // Freshly Swapped
+                case 3: return <StyledCell><Cell  color={"blue"} number={number} key={key}></Cell></StyledCell>      // In Final Sorted Position
+                case 4: return <StyledCell><Cell  color={"yellow"} number={number} key={key}></Cell></StyledCell>    //  Highlighted (2) (For contrast)
+            }
         }
     }
     
     render() { 
         return (  
             <Box sx={{ height: 'calc(100vh - 65px)' }} >
-                <Box sx = {{margin:"auto"}} p={4}>
-                    <FormControl variant="standard">
-                        <InputLabel>Algorithm</InputLabel>
-                        <Select
-                            value={this.state.value}
-                            label={this.state.name}
-                            onChange={this.handleAlgorithmChange}
-                        >
-                            <MenuItem value={0}>Bubble Sort</MenuItem>
-                            <MenuItem value={1}>Insertion Sort</MenuItem>
-                            <MenuItem value={2}>Quick Sort</MenuItem>
-                            <MenuItem value={3}>Heap Sort</MenuItem>
-                        </Select>
-                    </FormControl>                    
+                <Box sx = {{ width:"100%", display:"flex", height:'15%'}}>
+                    <Box sx = {{mr:"auto"}} p={4}>
+                        <FormControl variant="standard">
+                            <InputLabel>Algorithm</InputLabel>
+                            <Select
+                                value={this.state.value}
+                                label={this.state.name}
+                                onChange={this.handleAlgorithmChange}
+                            >
+                                <MenuItem value={0}>Bubble Sort</MenuItem>
+                                <MenuItem value={1}>Insertion Sort</MenuItem>
+                                <MenuItem value={2}>Quick Sort</MenuItem>
+                                <MenuItem value={3}>Heap Sort</MenuItem>
+                                <MenuItem value={4}>Merge Sort</MenuItem>
+                                <MenuItem value={5}>Counting Sort</MenuItem>
+                                <MenuItem value={6}>Radix Sort</MenuItem>
+                                <MenuItem value={7}>Bucket Sort</MenuItem>
+                                <MenuItem value={8}>Quick Insertion Sort</MenuItem>
+                            </Select>
+                        </FormControl>                    
+                    </Box>
+
+                    <Box pt={5}>
+                        <FormGroup>
+                            <FormControlLabel control={<Switch onChange={this.handleMode} size="large"/>} label="Advanced Mode" />
+                        </FormGroup>
+                    </Box>
                 </Box>
 
-                <Box sx = {{margin:"auto", width:'100%'}}>
-                    <Typography pt={1} variant="h3" align="center">{this.state.name}</Typography>
-                </Box>
-
-                <Box sx = {{display:"flex", width:'100%'}}>
-                    {this.state.array && <Box margin="auto" display="flex" mt={'calc(30vh - 65px)'}>
+                <Box sx = {{display:"flex", width:'100%', height:'70%'}}>
+                    {this.state.array && <Box margin="auto" display="flex">
                     {this.cells = this.state.array.map((number, key) => 
                         this.cellFactory(key, number)
                     )}
                     </Box>}
                 </Box>
 
-                <Box sx = {{display:"flex", width:'100%', mt:'calc(10vh + 30px)'}}>
+                <Paper elevation={4} sx = {{display:"flex", width:'100%', bgcolor:"lightblue", height:'15%'}}>
                     <Box margin="auto">
-                        <Button onClick={this.playAnimation}>Play Animation</Button>
-                        <Button onClick={this.handleClick}>Next Frame</Button>
-                        <Button onClick={this.resetAnimation}>Reset Animation</Button>
-                        <Button onClick={this.changeSpeed}>{this.state.delay === 1000 ? '2x Speed'  : 
-                                                            this.state.delay === 500  ? '4x Speed'  :
-                                                            this.state.delay === 250  ? '8x Speed'  :
-                                                            this.state.delay === 125  ? '16x Speed' : '32x Speed'}</Button>
+                        <Button component="label" sx={{margin:'8px'}} variant="contained">Load Numbers from File
+                            <input accept='.txt' multiple hidden type='file' ref={this.file} onChange={this.loadNumbersFromFile}></input>
+                        </Button>
+                        <Button sx={{margin:'8px'}} variant="contained"  onClick={this.defineArray}>Enter Numbers</Button>
                     </Box>
-                </Box>
+                    <Box margin="auto">
+                        <Button sx={{margin:'8px'}} variant="contained" onClick={this.playAnimation}>Play Animation</Button>
+                        <Button sx={{margin:'8px'}} variant="contained" onClick={this.handleClick}>Next Frame</Button>
+                        <Button sx={{margin:'8px'}} variant="contained" onClick={this.resetAnimation}>Reset Animation</Button>
+                        <Button sx={{margin:'8px'}} variant="contained" onClick={this.changeSpeed}>{this.state.fps === 1 ? '2x Speed'  : 
+                                                            this.state.fps === 4  ? '4x Speed'  :
+                                                            this.state.fps === 16  ? '8x Speed'  : '16x Speed' }</Button>
+                    </Box>
+                </Paper>
             </Box>
         );
     }

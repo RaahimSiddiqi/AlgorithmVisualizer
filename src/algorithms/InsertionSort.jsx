@@ -12,7 +12,12 @@ export default function *InsertionSort(v) {  // Insertion Sort
         while (j >= 0 && array[j] > key) { 
             v.selected = v.selected.fill(0, i, array.length-1);
             array[j + 1] = array[j];  
-            j = j - 1;  
+            j = j - 1; 
+            if (v.state.mode) {
+                v.selected[j + 1] = 2;
+                yield {numbers :array}; 
+                v.selected[j + 1] = 0;
+            }
         }  
         array[j + 1] = key; 
 

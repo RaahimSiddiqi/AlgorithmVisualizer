@@ -13,7 +13,7 @@ function Header(props) {
     const navigate = useNavigate();
     
     return (
-      <AppBar color='transparent' position='static' sx={{m: 0}}>
+      <AppBar position='static' sx={{m: 0, bgcolor:'#0093AB'}}>
         <Toolbar>       
           <Typography variant="h6" component='div' sx={{flexGrow:1}}>Algo Vision</Typography>
           <Stack direction="row" spacing={2} sx={{ display : { xs : 'none', md : 'flex'}}}>
