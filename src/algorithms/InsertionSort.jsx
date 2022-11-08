@@ -13,20 +13,20 @@ export default function *InsertionSort(v) {  // Insertion Sort
             v.selected = v.selected.fill(0, i, array.length-1);
             array[j + 1] = array[j];  
             j = j - 1; 
-            if (v.state.mode) {
-                v.selected[j + 1] = 2;
-                yield {numbers :array}; 
-                v.selected[j + 1] = 0;
-            }
+            let temp = [...array]
+            temp[j + 1] = key
+            
+            v.selected[i] = 3;
+            v.selected[j + 1] = 2;
+            yield {numbers : temp}; 
+            v.selected[j + 1] = 3;
         }  
         array[j + 1] = key; 
 
-        v.selected[i] = 2;
         v.selected[j + 1] = 2;
         yield {numbers :array};
 
         v.selected[j + 1] = 3;
-        v.selected[i] = 3;
         yield {numbers :array};
     }  
 }

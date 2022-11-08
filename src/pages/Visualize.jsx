@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {Box, Typography, Paper, Button, MenuItem, Select, FormControl, InputLabel, FormGroup,
-        Switch, FormControlLabel } from '@mui/material'
+        Switch, FormControlLabel, Dialog, DialogActions, DialogContent, DialogTitle,
+        DialogContentText, TextField } from '@mui/material'
 import { Component } from "react";
 import { StyledCell, SwappedCell, StyledColumn }  from "./animations";
 import Cell  from "../components/Cell";
@@ -19,7 +20,8 @@ class Visualize extends Component {
             fps : 1, 
             name : "Merge Sort",
             value: 4,
-            mode : 0
+            mode : 0,
+            dialog: false
         }
         this.sorts = { 
             "Bubble Sort" : () => BubbleSort(this),
@@ -39,6 +41,7 @@ class Visualize extends Component {
         this.playing = false;
         this.animator = new Animator(this, this.animate)
         this.file = createRef(null);
+        this.sequence = '';
 
         this.handleClick = this.handleClick.bind(this);
         this.playAnimation = this.playAnimation.bind(this);
@@ -50,6 +53,10 @@ class Visualize extends Component {
         this.handleMode = this.handleMode.bind(this);
         this.stop = this.stop.bind(this);
         this.loadNumbersFromFile = this.loadNumbersFromFile.bind(this);
+        this.closeDialog = this.closeDialog.bind(this);
+        this.openDialog = this.openDialog.bind(this);
+        this.setDialog = this.setDialog.bind(this);
+        this.handleDialog = this.handleDialog.bind(this);
     }
 
     stop() {
@@ -72,7 +79,7 @@ class Visualize extends Component {
         else if (event.target.value === 6) 
             this.setState({name: "Radix Sort", value:6}, () => this.x = this.sorts[this.state.name]())
         else if (event.target.value === 7) 
-            this.setState({name: "Radix Sort", value:7}, () => this.x = this.sorts[this.state.name]())
+            this.setState({name: "Bucket Sort", value:7}, () => this.x = this.sorts[this.state.name]())
         else if (event.target.value === 8) 
             this.setState({name: "Quick Insertion Sort", value:8}, () => this.x = this.sorts[this.state.name]())
         this.resetAnimation() 
@@ -124,13 +131,63 @@ class Visualize extends Component {
         this.animator.start();
     }
 
-    loadNumbersFromFile() {
+    closeDialog() {
+        this.setState({dialog: false});
+    }
+
+    handleDialog(e) {
+        let data = this.state.sequence.split(',');
+        for(var i = 0; i < data.length; i++) 
+            data[i] = parseInt(data[i]);
+        this.setState({array: [...data]}, () => this.original = this.state.array);
+        this.closeDialog();
+    }
+
+    setDialog() {
+        this.setState({dialog: true});
+    }
+
+    openDialog() {
+        return(
+            <Dialog open={this.state.dialog} onClose={this.closeDialog}>
+            <DialogTitle>Enter Numbers</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                Enter a sequence of comma separated numbers
+              </DialogContentText>
+              <TextField
+                autoFocus
+                margin="dense"
+                id="name"
+                label="e.g  1,2,3...."
+                type="email"
+                fullWidth
+                variant="standard"
+                onChange={e => {
+                    this.setState({sequence: e.target.value})
+                }}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={this.handleDialog}>Submit</Button>
+              <Button onClick={this.closeDialog}>Close</Button>
+            </DialogActions>
+          </Dialog>            
+        )
+    }
+
+    loadNumbersFromFile(e) {
         console.log("an");
+        var list;
         this.file.current.files[0].arrayBuffer()
             .then((buffer) => {
-                const list = new TextDecoder('utf-8').decode(buffer);
-                console.log(list);
+                const data = new TextDecoder('utf-8').decode(buffer);
+                list = data.split(',');
+                for(var i = 0; i < list.length; i++) 
+                    list[i] = parseInt(list[i]);
+                this.setState({array: [...list]}, () => this.original = this.state.array);
             })
+        e.target.value = '';
     }
 
     resetAnimation() {
@@ -163,6 +220,7 @@ class Visualize extends Component {
     render() { 
         return (  
             <Box sx={{ height: 'calc(100vh - 65px)' }} >
+                {this.state.dialog && this.openDialog()}
                 <Box sx = {{ width:"100%", display:"flex", height:'15%'}}>
                     <Box sx = {{mr:"auto"}} p={4}>
                         <FormControl variant="standard">
@@ -205,7 +263,7 @@ class Visualize extends Component {
                         <Button component="label" sx={{margin:'8px'}} variant="contained">Load Numbers from File
                             <input accept='.txt' multiple hidden type='file' ref={this.file} onChange={this.loadNumbersFromFile}></input>
                         </Button>
-                        <Button sx={{margin:'8px'}} variant="contained"  onClick={this.defineArray}>Enter Numbers</Button>
+                        <Button sx={{margin:'8px'}} variant="contained"  onClick={this.setDialog}>Enter Numbers</Button>
                     </Box>
                     <Box margin="auto">
                         <Button sx={{margin:'8px'}} variant="contained" onClick={this.playAnimation}>Play Animation</Button>

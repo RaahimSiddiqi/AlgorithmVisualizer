@@ -38,4 +38,6 @@ function *quickSort(arr, low, high, v) {
         yield* quickSort(arr, low, pi - 1, v);
         yield* quickSort(arr, pi + 1, high, v);
     }
+    v.selected.fill(0)
+    yield { numbers: arr}
 }
