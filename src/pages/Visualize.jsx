@@ -64,6 +64,7 @@ class Visualize extends Component {
         this.handleDialog = this.handleDialog.bind(this);
         this.defineAuxArray = this.defineAuxArray.bind(this);
         this.auxCellFactory = this.auxCellFactory.bind(this);
+        this.handleSizeAndRange = this.handleSizeAndRange.bind(this)
     }
 
     componentDidMount() {
@@ -77,13 +78,27 @@ class Visualize extends Component {
     stop() {
         this.animator.stop();
     }
+
+    handleSizeAndRange(event) {
+        if (event.target.value === 5)  {
+            if (this.RANGE != 50) 
+                this.RANGE = 50;
+        }
+        else {
+            if (this.RANGE != 130) 
+                this.RANGE = 130;
+            if (this.state.aux === 1) this.setState({aux : 0});
+        }
+        this.setState({array: this.state.array.map(x=>Math.round(Math.random()*this.RANGE))},
+        () => {
+            this.original = this.state.array;
+        });
+    }
       
     handleAlgorithmChange(event) {
-        if (event.target.value === 5 || event.target.value === 7) 
-            this.RANGE = 50;
-        else
-            this.RANGE = 130;
-
+        this.resetAnimation() 
+        this.handleSizeAndRange(event);
+        
         if (event.target.value === 0)  
             this.setState({name: "Bubble Sort", value:0}, () => this.x = this.sorts[this.state.name]())
         else if (event.target.value === 1) 
@@ -105,7 +120,6 @@ class Visualize extends Component {
             this.setState({name: "Bucket Sort", value:7}, () => this.x = this.sorts[this.state.name]())
         else if (event.target.value === 8) 
             this.setState({name: "Quick Insertion Sort", value:8}, () => this.x = this.sorts[this.state.name]())
-        this.resetAnimation() 
     }
 
     handleMode(event) {
@@ -273,6 +287,8 @@ class Visualize extends Component {
                         return <StyledCell><Cell  width={20} height={2.4 * number} color={"#0093AB"} number={''} key={key}></Cell></StyledCell> 
                 case 2: 
                     return <StyledCell><Cell width={20} height={2.4 * number} color={"red"} number={''} key={key}></Cell></StyledCell>     // Freshly Swapped
+                case 3: 
+                    return <StyledCell><Cell width={20} height={2.4 * number} color={"blue"} number={''} key={key}></Cell></StyledCell>   
                 case 4: 
                     if (this.state.value === 6) 
                         return <StyledCell><Cell  width={20} height={2.4 * number} color={"#FFD700"} number={''} key={key}></Cell></StyledCell>  

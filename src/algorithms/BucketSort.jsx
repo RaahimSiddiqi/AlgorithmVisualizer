@@ -23,19 +23,18 @@ export default function *BucketSort(v) {
             buckets[index - 1].push(array[i]);
         }
     }
-    console.log(buckets)
     
     for (let i = 0, k = 0; i < n; i++) {
         for (let j = 0; j < buckets[i].length; j++, k++) {
             array[k] = buckets[i][j]
-            v.selected[k] = 1
+            if (v.state.mode == 0) v.selected[k] = 1
+            if (v.state.mode) v.selected[k] = "yellow"
         }
         if (buckets[i].length > 0) yield { numbers: array }
         k -= buckets[i].length;
         
         for (var m = 1; m < buckets[i].length; m++, k++) { 
             let key = buckets[i][m];  
-            
             let j = m - 1;  
     
             while (j >= 0 && buckets[i][j] > key) { 
@@ -49,19 +48,17 @@ export default function *BucketSort(v) {
 
                 v.selected[k] = 2;
                 yield {numbers : temp}; 
-                v.selected[k] = 1;
+                v.selected[k] = "yellow";
             }  
             buckets[i][j + 1] = key; 
             array[k + 1] = key;
         }  
 
         if (buckets[i].length > 1) k -= buckets[i].length - 1;
-        console.log("k0: ", k)
         for (let j = 0; j < buckets[i].length; j++, k++) {
             array[k] = buckets[i][j]
         }
-        console.log("k: ", k)
-        console.log("bucket ", buckets[i])
+
         if (buckets[i].length > 0) yield { numbers: array }
         v.selected = v.selected.fill(0);
     }

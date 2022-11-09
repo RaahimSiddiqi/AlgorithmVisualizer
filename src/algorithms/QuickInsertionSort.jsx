@@ -24,10 +24,8 @@ function *InsertionSort(arr, low, n, v) {  // Insertion Sort
         v.selected[i] = 2;
         v.selected[j + 1] = 2;
         yield {numbers :array};
-
-        v.selected[j + 1] = 3;
-        v.selected[i] = 3;
-        yield {numbers :array};
+        v.selected[i] = 0;
+        v.selected[j + 1] = 0;
     }  
 }
 
@@ -72,4 +70,6 @@ function *quickInsertionSort(arr, low, high, v) {
     else {
         yield* InsertionSort(arr, low, high, v)
     }
+    v.selected.fill(0);
+    yield { numbers: arr}
 }
