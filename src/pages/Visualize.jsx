@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React from 'react';
 import {Box, Typography, Paper, Button, MenuItem, Select, FormControl, InputLabel, FormGroup,
         Switch, FormControlLabel, Dialog, DialogActions, DialogContent, DialogTitle,
         DialogContentText, TextField } from '@mui/material'
 import { Component } from "react";
-import { StyledCell, SwappedCell, StyledColumn }  from "./animations";
+import { StyledCell, SwappedCell}  from "./animations";
 import Cell  from "../components/Cell";
-import { styled } from '@mui/system';
 import {BubbleSort, InsertionSort, HeapSort, QuickSort, MergeSort, 
        CountingSort, RadixSort, QuickInsertionSort, BucketSort} from "../algorithms";
 import Animator from "../utils/Animator";
@@ -16,12 +15,14 @@ class Visualize extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            array : Array.from(Array(16)).map(x=>Math.round(Math.random()*100)),
-            fps : 1, 
-            name : "Merge Sort",
-            value: 4,
+            array : props.array,
+            fps : props.fps, 
+            name : props.name,
+            value: props.value,
             mode : 0,
-            dialog: false
+            dialog: false,
+            aux : 0,
+            auxArray: null
         }
         this.sorts = { 
             "Bubble Sort" : () => BubbleSort(this),
@@ -36,12 +37,16 @@ class Visualize extends Component {
         }
         this.original = [...this.state.array];
         this.selected = new Array(this.state.array.length).fill(0);
+        this.auxSupportingArray = null;
         this.cells = null;
         this.x = this.sorts[this.state.name]();
         this.playing = false;
         this.animator = new Animator(this, this.animate)
         this.file = createRef(null);
         this.sequence = '';
+        this.options = props.options;
+        this.SIZE = props.array.length;
+        this.RANGE = 130;
 
         this.handleClick = this.handleClick.bind(this);
         this.playAnimation = this.playAnimation.bind(this);
@@ -57,6 +62,16 @@ class Visualize extends Component {
         this.openDialog = this.openDialog.bind(this);
         this.setDialog = this.setDialog.bind(this);
         this.handleDialog = this.handleDialog.bind(this);
+        this.defineAuxArray = this.defineAuxArray.bind(this);
+        this.auxCellFactory = this.auxCellFactory.bind(this);
+    }
+
+    componentDidMount() {
+        this.setState({aux : 1});
+        if (this.options.animateUponLoading && this.options.animateUponLoading === true) {
+            this.playing = true;
+            this.animator.start();
+        }
     }
 
     stop() {
@@ -64,6 +79,11 @@ class Visualize extends Component {
     }
       
     handleAlgorithmChange(event) {
+        if (event.target.value === 5 || event.target.value === 7) 
+            this.RANGE = 50;
+        else
+            this.RANGE = 130;
+
         if (event.target.value === 0)  
             this.setState({name: "Bubble Sort", value:0}, () => this.x = this.sorts[this.state.name]())
         else if (event.target.value === 1) 
@@ -74,8 +94,11 @@ class Visualize extends Component {
             this.setState({name: "Heap Sort", value:3}, () => this.x = this.sorts[this.state.name]())
         else if (event.target.value === 4) 
             this.setState({name: "Merge Sort", value:4}, () => this.x = this.sorts[this.state.name]())
-        else if (event.target.value === 5) 
-            this.setState({name: "Counting Sort", value:5}, () => this.x = this.sorts[this.state.name]())
+        else if (event.target.value === 5)
+            this.setState({name: "Counting Sort", value:5}, () => {
+                this.x = this.sorts[this.state.name](); 
+                this.setState({aux : 1});
+            })
         else if (event.target.value === 6) 
             this.setState({name: "Radix Sort", value:6}, () => this.x = this.sorts[this.state.name]())
         else if (event.target.value === 7) 
@@ -87,12 +110,22 @@ class Visualize extends Component {
 
     handleMode(event) {
         this.setState({mode:!this.state.mode}, () => {
-            if (this.state.mode) 
-                this.setState({array: Array.from(Array(50)).map(x=>Math.round(Math.random()*100))},
-                () => this.original = this.state.array)
-            else
-                this.setState({array: Array.from(Array(16)).map(x=>Math.round(Math.random()*100))},
-                () => this.original = this.state.array)
+            if (this.state.mode) {
+                this.SIZE = 50;
+                this.selected = new Array(this.SIZE).fill(0);
+                this.setState({array: Array.from(Array(this.SIZE)).map(x=>Math.round(Math.random()*this.RANGE))},
+                () => {
+                    this.original = this.state.array;
+                })
+            }
+            else {
+                this.SIZE = 16;
+                this.selected = new Array(this.SIZE).fill(0);
+                this.setState({array: Array.from(Array(this.SIZE)).map(x=>Math.round(Math.random()*this.RANGE))},
+                () =>  {
+                    this.original = this.state.array;
+                })
+            }
         });
         this.resetAnimation() 
     }
@@ -137,9 +170,14 @@ class Visualize extends Component {
 
     handleDialog(e) {
         let data = this.state.sequence.split(',');
+        if (data.length > this.SIZE) {
+            alert("Too many values entered!   Max:" + this.SIZE);
+            return;
+        }
         for(var i = 0; i < data.length; i++) 
             data[i] = parseInt(data[i]);
         this.setState({array: [...data]}, () => this.original = this.state.array);
+        this.SIZE = data.length;
         this.closeDialog();
     }
 
@@ -177,12 +215,22 @@ class Visualize extends Component {
     }
 
     loadNumbersFromFile(e) {
-        console.log("an");
         var list;
         this.file.current.files[0].arrayBuffer()
             .then((buffer) => {
                 const data = new TextDecoder('utf-8').decode(buffer);
                 list = data.split(',');
+                if (list.length === 1) {
+                    if (data.split('\n').length > list.length)
+                        list = data.split('\n');
+                }
+
+                if (list.length > this.SIZE) {
+                    alert("Too many values entered!   Max:" + this.SIZE);
+                    return;
+                }
+
+                
                 for(var i = 0; i < list.length; i++) 
                     list[i] = parseInt(list[i]);
                 this.setState({array: [...list]}, () => this.original = this.state.array);
@@ -195,15 +243,43 @@ class Visualize extends Component {
         this.x = this.sorts[this.state.name]();
         this.setState({array: [...this.original], fps: 1});
         this.selected = new Array(this.state.array.length).fill(0);
+        if (this.auxSupportingArray != null) this.auxSupportingArray.fill(0);
         this.playing = false;
+    }
+
+    auxCellFactory(key, number) {
+        return(
+            <Box>
+                <StyledCell><Cell  width={20} height={this.auxSupportingArray[key] * 1.5} color={"#0093AB"} number={''} key={key}></Cell></StyledCell>
+                <Typography>{this.auxSupportingArray[key]}</Typography>
+            </Box>
+        )
+    } 
+
+    defineAuxArray(n) {
+        this.auxSupportingArray = Array(n).fill(0)
+        this.setState({auxArray : Array(n).fill(0)})
     }
 
     cellFactory(key, number) {
         if (this.state.mode) {
             switch(this.selected[key]) {
-                case 0: return <StyledCell><Cell  width={20} height={3 * number} color={"#0093AB"} number={''} key={key}></Cell></StyledCell> // Default
-                case 2: return <StyledCell><Cell width={20} height={3 * number} color={"red"} number={''} key={key}></Cell></StyledCell>     // Freshly Swapped
-                default:  return <StyledCell><Cell  width={20} height={3 * number} color={"#0093AB"} number={''} key={key}></Cell></StyledCell> // Default
+                case 0: 
+                    return <StyledCell><Cell  width={20} height={2.4 * number} color={"#0093AB"} number={''} key={key}></Cell></StyledCell> // Default
+                case 1: 
+                    if (this.state.value === 6) 
+                        return <StyledCell><Cell width={20}  height={2.4 * number} color={"green"} number={''} key={key}></Cell></StyledCell> 
+                    else
+                        return <StyledCell><Cell  width={20} height={2.4 * number} color={"#0093AB"} number={''} key={key}></Cell></StyledCell> 
+                case 2: 
+                    return <StyledCell><Cell width={20} height={2.4 * number} color={"red"} number={''} key={key}></Cell></StyledCell>     // Freshly Swapped
+                case 4: 
+                    if (this.state.value === 6) 
+                        return <StyledCell><Cell  width={20} height={2.4 * number} color={"#FFD700"} number={''} key={key}></Cell></StyledCell>  
+                    else
+                        return <StyledCell><Cell  width={20} height={2.4 * number} color={"#0093AB"} number={''} key={key}></Cell></StyledCell> 
+                default:  
+                    return <StyledCell><Cell  width={20} height={2.4 * number} color={this.selected[key]} number={''} key={key}></Cell></StyledCell> // Default
             }
         }
         else {
@@ -212,7 +288,8 @@ class Visualize extends Component {
                 case 1: return <StyledCell><Cell  color={"green"} number={number} key={key}></Cell></StyledCell>     // Highlighted (currently selected)
                 case 2: return <SwappedCell><Cell color={"red"} number={number} key={key}></Cell></SwappedCell>     // Freshly Swapped
                 case 3: return <StyledCell><Cell  color={"blue"} number={number} key={key}></Cell></StyledCell>      // In Final Sorted Position
-                case 4: return <StyledCell><Cell  color={"yellow"} number={number} key={key}></Cell></StyledCell>    //  Highlighted (2) (For contrast)
+                case 4: return <StyledCell><Cell  color={"#FFD700"} number={number} key={key}></Cell></StyledCell>    //  Highlighted (2) (For contrast)
+                default:  return <StyledCell><Cell  color={this.selected[key]} number={number} key={key}></Cell></StyledCell>
             }
         }
     }
@@ -250,14 +327,21 @@ class Visualize extends Component {
                     </Box>
                 </Box>
 
-                <Box sx = {{display:"flex", width:'100%', height:'70%'}}>
+                <Box sx = {{display:"flex", width:'100%', height: this.state.aux === 0 ?'70%' : '55%'}}>
                     {this.state.array && <Box margin="auto" display="flex">
                     {this.cells = this.state.array.map((number, key) => 
                         this.cellFactory(key, number)
-                    )}
+                    )}</Box>}
+                </Box>
+                <Box sx = {{display:"flex", width:'100%', height: this.state.aux === 0 ?'0%' : '15%'}}>
+                    {this.state.aux === 1 && this.state.auxArray && <Box margin="auto" sx={{display:"flex"}}>
+                        {this.state.auxArray.map((number, key) => 
+                            this.auxCellFactory(key, number)
+                        )}                        
                     </Box>}
                 </Box>
-
+                
+                { this.options.disableToolBar == false &&
                 <Paper elevation={4} sx = {{display:"flex", width:'100%', bgcolor:"lightblue", height:'15%'}}>
                     <Box margin="auto">
                         <Button component="label" sx={{margin:'8px'}} variant="contained">Load Numbers from File
@@ -274,6 +358,7 @@ class Visualize extends Component {
                                                             this.state.fps === 16  ? '8x Speed'  : '16x Speed' }</Button>
                     </Box>
                 </Paper>
+                }
             </Box>
         );
     }

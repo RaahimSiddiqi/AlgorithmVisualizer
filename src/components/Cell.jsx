@@ -1,4 +1,4 @@
-import {Box, Divider, Grid, Stack, Typography, Paper, Button, IconButton } from '@mui/material'
+import {Typography, Paper} from '@mui/material'
 
 const Cell = ({number, id, color, width = 60, height = 60}) => {
     return ( 

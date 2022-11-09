@@ -1,8 +1,6 @@
 
 
-export default function *CountingSort(v, exp) {  
-    let array = v.state.array;
-  
+export default function *CountingSort(array) {  
     // Creates 2D list of size max number in the array
     let counts = Array(Math.max(...array) + 1).fill(0)  
   
@@ -20,5 +18,7 @@ export default function *CountingSort(v, exp) {
       arr[index] = array[i]
       counts[array[i]] -= 1 
     }
-  }
+    
+    return array;
+}
   
