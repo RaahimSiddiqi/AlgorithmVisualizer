@@ -21,6 +21,7 @@ class Visualize extends Component {
             value: props.value,
             mode : 0,
             dialog: false,
+            pDialog: false,
             aux : 0,
             auxArray: null
         }
@@ -48,6 +49,8 @@ class Visualize extends Component {
         this.SIZE = props.array.length;
         this.RANGE = 130;
 
+        this.startTime = 0
+        this.endTime = 0
         this.handleClick = this.handleClick.bind(this);
         this.playAnimation = this.playAnimation.bind(this);
         this.resetAnimation = this.resetAnimation.bind(this);
@@ -62,6 +65,8 @@ class Visualize extends Component {
         this.openDialog = this.openDialog.bind(this);
         this.setDialog = this.setDialog.bind(this);
         this.handleDialog = this.handleDialog.bind(this);
+        this.handlePerformanceDialog = this.handlePerformanceDialog.bind(this);
+        this.closePerformanceDialog = this.closePerformanceDialog.bind(this);
         this.defineAuxArray = this.defineAuxArray.bind(this);
         this.auxCellFactory = this.auxCellFactory.bind(this);
         this.handleSizeAndRange = this.handleSizeAndRange.bind(this)
@@ -144,13 +149,18 @@ class Visualize extends Component {
         this.resetAnimation() 
     }
 
-    changeSpeed() {
+    changeSpeed() { 
         this.resetAnimation();
         if (this.state.fps === 64)
-            this.setState({fps : 1});
+            this.setState({fps : 1}, () => {
+                console.log("current FPS ", this.state.fps);
+                this.playAnimation();
+        });
         else
-        this.setState({fps : this.state.fps * 4});
-        this.playAnimation();
+            this.setState({fps : this.state.fps * 4}, () => {
+                console.log("current FPS ", this.state.fps);
+                this.playAnimation();
+            });
     }
 
     animate = (animatorRef) => {  // 0 for full animation, 1 for single frame
@@ -164,6 +174,11 @@ class Visualize extends Component {
         else {
             this.playing = false;
             animatorRef.stop();
+            this.endTime = performance.now();
+            console.log("End: ", this.endTime);
+            console.log("Start: ", this.startTime);
+            console.log("Time taken (seconds): ", (this.endTime - this.startTime) / 1000);
+            this.setState({pDialog: true});
         }
     }
 
@@ -174,8 +189,29 @@ class Visualize extends Component {
     }
 
     playAnimation() {
+        this.startTime = performance.now();
         this.playing = true;
         this.animator.start();
+    }
+
+    closePerformanceDialog() {
+        this.setState({pDialog: false});
+    }
+
+    handlePerformanceDialog() {
+        return(
+            <Dialog open={this.state.pDialog} onClose={this.closePerformanceDialog}>
+            <DialogTitle>Performance Report</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                Number of Seconds Taken: {((this.endTime - this.startTime) / 1000).toFixed(2)}
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={this.closePerformanceDialog}>Close</Button>
+            </DialogActions>
+          </Dialog>            
+        )
     }
 
     closeDialog() {
@@ -253,9 +289,12 @@ class Visualize extends Component {
     }
 
     resetAnimation() {
+        this.startTime = 0;
+        this.endTime = 0;
+
         this.animator.stop();
         this.x = this.sorts[this.state.name]();
-        this.setState({array: [...this.original], fps: 1});
+        this.setState({array: [...this.original]});
         this.selected = new Array(this.state.array.length).fill(0);
         if (this.auxSupportingArray != null) this.auxSupportingArray.fill(0);
         this.playing = false;
@@ -313,6 +352,7 @@ class Visualize extends Component {
     render() { 
         return (  
             <Box sx={{ height: 'calc(100vh - 65px)' }} >
+                {this.state.pDialog && this.handlePerformanceDialog()}
                 {this.state.dialog && this.openDialog()}
                 <Box sx = {{ width:"100%", display:"flex", height:'15%'}}>
                     <Box sx = {{mr:"auto"}} p={4}>
@@ -343,14 +383,14 @@ class Visualize extends Component {
                     </Box>
                 </Box>
 
-                <Box sx = {{display:"flex", width:'100%', height: this.state.aux === 0 ?'70%' : '55%'}}>
-                    {this.state.array && <Box margin="auto" display="flex">
+                <Box sx = {{display:"flex", alignItems:"flex-end", width:'100%', height: this.state.aux === 0 ?'70%' : '55%'}}>
+                    {this.state.array && <Box margin="auto" display="flex" alignItems="flex-end">
                     {this.cells = this.state.array.map((number, key) => 
                         this.cellFactory(key, number)
                     )}</Box>}
                 </Box>
-                <Box sx = {{display:"flex", width:'100%', height: this.state.aux === 0 ?'0%' : '15%'}}>
-                    {this.state.aux === 1 && this.state.auxArray && <Box margin="auto" sx={{display:"flex"}}>
+                <Box sx = {{display:"flex", alignItems:"flex-end", width:'100%', height: this.state.aux === 0 ?'0%' : '15%'}}>
+                    {this.state.aux === 1 && this.state.auxArray && <Box margin="auto" sx={{display:"flex", alignItems:"flex-end"  }}>
                         {this.state.auxArray.map((number, key) => 
                             this.auxCellFactory(key, number)
                         )}                        
@@ -371,7 +411,8 @@ class Visualize extends Component {
                         <Button sx={{margin:'8px'}} variant="contained" onClick={this.resetAnimation}>Reset Animation</Button>
                         <Button sx={{margin:'8px'}} variant="contained" onClick={this.changeSpeed}>{this.state.fps === 1 ? '2x Speed'  : 
                                                             this.state.fps === 4  ? '4x Speed'  :
-                                                            this.state.fps === 16  ? '8x Speed'  : '16x Speed' }</Button>
+                                                            this.state.fps === 16  ? '8x Speed'  : 
+                                                            this.state.fps === 64 ? '16x Speed' : '32x Speed'}</Button>
                     </Box>
                 </Paper>
                 }
