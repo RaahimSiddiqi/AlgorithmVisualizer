@@ -5,9 +5,11 @@ export default function *BubbleSort(v) {
     for(var i = 0; i < array.length; i++){
         for(var j = 0; j < ( array.length - i -1 ); j++){  
             v.selected = v.selected.fill(0, 0, array.length - i);
-            v.selected[j] = 1;
-            v.selected[j+1] = 1;
-            yield {numbers :array};
+            if (v.state.mode == 0) {
+                v.selected[j] = 1;
+                v.selected[j+1] = 1;
+                yield {numbers :array};
+            }
 
             if (array[j] > array[j+1]) {
                 var temp = array[j]
