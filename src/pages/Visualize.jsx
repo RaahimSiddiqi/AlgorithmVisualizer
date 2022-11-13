@@ -318,23 +318,23 @@ class Visualize extends Component {
         if (this.state.mode) {
             switch(this.selected[key]) {
                 case 0: 
-                    return <StyledCell><Cell  width={20} height={2.4 * number} color={"#0093AB"} number={''} key={key}></Cell></StyledCell> // Default
+                    return <StyledCell><Cell  width={20} height={2.4 * number + 1} color={"#0093AB"} number={''} key={key}></Cell></StyledCell> // Default
                 case 1: 
                     if (this.state.value === 6) 
-                        return <StyledCell><Cell width={20}  height={2.4 * number} color={"green"} number={''} key={key}></Cell></StyledCell> 
+                        return <StyledCell><Cell width={20}  height={2.4 * number + 1} color={"green"} number={''} key={key}></Cell></StyledCell> 
                     else
-                        return <StyledCell><Cell  width={20} height={2.4 * number} color={"#0093AB"} number={''} key={key}></Cell></StyledCell> 
+                        return <StyledCell><Cell  width={20} height={2.4 * number + 1} color={"#0093AB"} number={''} key={key}></Cell></StyledCell> 
                 case 2: 
-                    return <StyledCell><Cell width={20} height={2.4 * number} color={"red"} number={''} key={key}></Cell></StyledCell>     // Freshly Swapped
+                    return <StyledCell><Cell width={20} height={2.4 * number + 1} color={"red"} number={''} key={key}></Cell></StyledCell>     // Freshly Swapped
                 case 3: 
-                    return <StyledCell><Cell width={20} height={2.4 * number} color={"blue"} number={''} key={key}></Cell></StyledCell>   
+                    return <StyledCell><Cell width={20} height={2.4 * number + 1} color={"blue"} number={''} key={key}></Cell></StyledCell>   
                 case 4: 
                     if (this.state.value === 6) 
-                        return <StyledCell><Cell  width={20} height={2.4 * number} color={"#FFD700"} number={''} key={key}></Cell></StyledCell>  
+                        return <StyledCell><Cell  width={20} height={2.4 * number + 1} color={"#FFD700"} number={''} key={key}></Cell></StyledCell>  
                     else
-                        return <StyledCell><Cell  width={20} height={2.4 * number} color={"#0093AB"} number={''} key={key}></Cell></StyledCell> 
+                        return <StyledCell><Cell  width={20} height={2.4 * number + 1} color={"#0093AB"} number={''} key={key}></Cell></StyledCell> 
                 default:  
-                    return <StyledCell><Cell  width={20} height={2.4 * number} color={this.selected[key]} number={''} key={key}></Cell></StyledCell> // Default
+                    return <StyledCell><Cell  width={20} height={2.4 * number + 1} color={this.selected[key]} number={''} key={key}></Cell></StyledCell> // Default
             }
         }
         else {
