@@ -9,6 +9,7 @@ export default function *BucketSort(v) {
     let max = Math.max(...array);
     const n = array.length;
     var buckets = new Array(n);
+    
     for (var i = 0; i < n; ++i) {
         buckets[i] = []
     }
@@ -48,7 +49,8 @@ export default function *BucketSort(v) {
 
                 v.selected[k] = 2;
                 yield {numbers : temp}; 
-                v.selected[k] = "yellow";
+                if (v.state.mode) v.selected[k] = "yellow";
+                else v.selected[k] = 1;
             }  
             buckets[i][j + 1] = key; 
             array[k + 1] = key;
@@ -59,7 +61,7 @@ export default function *BucketSort(v) {
             array[k] = buckets[i][j]
         }
 
-        if (buckets[i].length > 0) yield { numbers: array }
+        // if (buckets[i].length > 0) yield { numbers: array }
         v.selected = v.selected.fill(0);
     }
 

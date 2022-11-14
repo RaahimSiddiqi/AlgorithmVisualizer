@@ -23,7 +23,9 @@ class Visualize extends Component {
             dialog: false,
             pDialog: false,
             aux : 0,
-            auxArray: null
+            auxArray: null,
+            width: 0, 
+            height: 0
         }
         this.sorts = { 
             "Bubble Sort" : () => BubbleSort(this),
@@ -69,15 +71,25 @@ class Visualize extends Component {
         this.closePerformanceDialog = this.closePerformanceDialog.bind(this);
         this.defineAuxArray = this.defineAuxArray.bind(this);
         this.auxCellFactory = this.auxCellFactory.bind(this);
-        this.handleSizeAndRange = this.handleSizeAndRange.bind(this)
+        this.handleSizeAndRange = this.handleSizeAndRange.bind(this);
+        this.updateWindowDimensions = this.updateWindowDimensions.bind(this);
     }
 
     componentDidMount() {
-        this.setState({aux : 1});
+        this.updateWindowDimensions();
+        window.addEventListener('resize', this.updateWindowDimensions);
         if (this.options.animateUponLoading && this.options.animateUponLoading === true) {
             this.playing = true;
             this.animator.start();
         }
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener('resize', this.updateWindowDimensions);
+    }
+
+    updateWindowDimensions() {
+        this.setState({ width: window.innerWidth, height: window.innerHeight });
     }
 
     stop() {
@@ -96,7 +108,7 @@ class Visualize extends Component {
         }
         this.setState({array: this.state.array.map(x=>Math.round(Math.random()*this.RANGE))},
         () => {
-            this.original = this.state.array;
+            this.original = [...this.state.array];
         });
     }
       
@@ -134,7 +146,7 @@ class Visualize extends Component {
                 this.selected = new Array(this.SIZE).fill(0);
                 this.setState({array: Array.from(Array(this.SIZE)).map(x=>Math.round(Math.random()*this.RANGE))},
                 () => {
-                    this.original = this.state.array;
+                    this.original = [...this.state.array];
                 })
             }
             else {
@@ -142,7 +154,7 @@ class Visualize extends Component {
                 this.selected = new Array(this.SIZE).fill(0);
                 this.setState({array: Array.from(Array(this.SIZE)).map(x=>Math.round(Math.random()*this.RANGE))},
                 () =>  {
-                    this.original = this.state.array;
+                    this.original = [...this.state.array];
                 })
             }
         });
@@ -226,7 +238,7 @@ class Visualize extends Component {
         }
         for(var i = 0; i < data.length; i++) 
             data[i] = parseInt(data[i]);
-        this.setState({array: [...data]}, () => this.original = this.state.array);
+        this.setState({array: [...data]}, () => this.original = [...this.state.array]);
         this.SIZE = data.length;
         this.closeDialog();
     }
@@ -270,6 +282,7 @@ class Visualize extends Component {
             .then((buffer) => {
                 const data = new TextDecoder('utf-8').decode(buffer);
                 list = data.split(',');
+
                 if (list.length === 1) {
                     if (data.split('\n').length > list.length)
                         list = data.split('\n');
@@ -283,7 +296,7 @@ class Visualize extends Component {
                 
                 for(var i = 0; i < list.length; i++) 
                     list[i] = parseInt(list[i]);
-                this.setState({array: [...list]}, () => this.original = this.state.array);
+                this.setState({array: [...list]}, () => this.original = [...this.state.array]);
             })
         e.target.value = '';
     }
@@ -315,26 +328,36 @@ class Visualize extends Component {
     }
 
     cellFactory(key, number) {
+        let max = Math.max(...this.state.array);
+        let x; 
+        
+        if (this.state.aux === 0) 
+            x = (this.state.height - 65) * 0.7 - 100;
+        else 
+            x = (this.state.height - 65) * 0.55 - 100;
+        
+        let h = (number / max) * x + 1;
+
         if (this.state.mode) {
             switch(this.selected[key]) {
                 case 0: 
-                    return <StyledCell><Cell  width={20} height={2.4 * number + 1} color={"#0093AB"} number={''} key={key}></Cell></StyledCell> // Default
+                    return <StyledCell><Cell  width={20} height={h} color={"#0093AB"} number={''} key={key}></Cell></StyledCell> // Default
                 case 1: 
                     if (this.state.value === 6) 
-                        return <StyledCell><Cell width={20}  height={2.4 * number + 1} color={"green"} number={''} key={key}></Cell></StyledCell> 
+                        return <StyledCell><Cell width={20}  height={h} color={"green"} number={''} key={key}></Cell></StyledCell> 
                     else
-                        return <StyledCell><Cell  width={20} height={2.4 * number + 1} color={"#0093AB"} number={''} key={key}></Cell></StyledCell> 
+                        return <StyledCell><Cell  width={20} height={h} color={"#0093AB"} number={''} key={key}></Cell></StyledCell> 
                 case 2: 
-                    return <StyledCell><Cell width={20} height={2.4 * number + 1} color={"red"} number={''} key={key}></Cell></StyledCell>     // Freshly Swapped
+                    return <StyledCell><Cell width={20} height={h} color={"red"} number={''} key={key}></Cell></StyledCell>     // Freshly Swapped
                 case 3: 
-                    return <StyledCell><Cell width={20} height={2.4 * number + 1} color={"blue"} number={''} key={key}></Cell></StyledCell>   
+                    return <StyledCell><Cell width={20} height={h} color={"blue"} number={''} key={key}></Cell></StyledCell>   
                 case 4: 
                     if (this.state.value === 6) 
-                        return <StyledCell><Cell  width={20} height={2.4 * number + 1} color={"#FFD700"} number={''} key={key}></Cell></StyledCell>  
+                        return <StyledCell><Cell  width={20} height={h} color={"#FFD700"} number={''} key={key}></Cell></StyledCell>  
                     else
-                        return <StyledCell><Cell  width={20} height={2.4 * number + 1} color={"#0093AB"} number={''} key={key}></Cell></StyledCell> 
+                        return <StyledCell><Cell  width={20} height={h} color={"#0093AB"} number={''} key={key}></Cell></StyledCell> 
                 default:  
-                    return <StyledCell><Cell  width={20} height={2.4 * number + 1} color={this.selected[key]} number={''} key={key}></Cell></StyledCell> // Default
+                    return <StyledCell><Cell  width={20} height={h} color={this.selected[key]} number={''} key={key}></Cell></StyledCell> // Default
             }
         }
         else {

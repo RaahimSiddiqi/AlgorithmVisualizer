@@ -13,14 +13,13 @@ import { createRef } from 'react';
 
 class Display extends Component {
     constructor(props) {
-        console.log("..")
         super(props);
         this.state = {
             array : props.array,
             fps : props.fps, 
             name : props.name,
             value: props.value,
-            mode : 0,
+            mode : 1,
             dialog: false,
             aux : 0,
             auxArray: null,
