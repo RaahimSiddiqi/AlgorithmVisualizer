@@ -14,7 +14,7 @@ class Main extends Component {
                 <Header/>
                 <Routes>
                     <Route path='/' element = {<Visualize name={"Merge Sort"} value={4} fps={1} array={Array.from(Array(16)).map(x=>Math.round(Math.random()*140))} options={{disableToolBar:false}}/>} />
-                    <Route path='/Q824' element = {<Q824/>} />
+                    <Route path='/Q.824' element = {<Q824/>} />
                     <Route path='/Visualizer' element = {<Visualize name={"Merge Sort"} value={4} fps={1} array={Array.from(Array(16)).map(x=>Math.round(Math.random()*140))} options={{disableToolBar:false}}/>} />
                     <Route path='/Algorithms' element = {<Visualize name={"Merge Sort"} value={4} fps={1} array={Array.from(Array(16)).map(x=>Math.round(Math.random()*140))} options={{disableToolBar:false}}/>} />
                     <Route path= "*" element={<Navigate to ="/" />}/>

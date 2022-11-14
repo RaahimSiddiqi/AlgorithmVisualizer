@@ -6,7 +6,7 @@ const links = [
     {name:"Home", path:"/"},
     {name:"Algorithms", path:"/Algorithms"},
     {name:"Visualizer", path:"/Visualizer"},
-    {name:"Q824", path:"/Q824"},
+    {name:"Q(8.2.4)", path:"/Q.824"},
   ]
 
 
